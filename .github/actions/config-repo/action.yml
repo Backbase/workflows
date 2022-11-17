@@ -1,0 +1,26 @@
+name: 'Configure Backbase Repo'
+description: Configure Backbase Repo credentials
+inputs:
+  username:
+    description: 'Artifactory Username'
+    required: true
+  password:
+    description: 'Artifactory Password'
+    required: true
+  id:
+    description: 'Repo ID'
+    required: false
+    default: 'backbase'
+  url:
+    description: 'URL of Backbase Repo'
+    required: false
+    default: 'https://repo.backbase.com/repo'
+runs:
+  using: "composite"
+  steps:
+    - name: Configure Maven
+      uses: whelk-io/maven-settings-xml-action@v21
+      with:
+        repositories: '[{ "id": "${{ inputs.id }}", "url": "${{ inputs.url }}" }]'
+        plugin_repositories: '[{ "id": "${{ inputs.id }}-plugins", "url": "${{ inputs.url }}" }]'
+        servers: '[{ "id": "${{ inputs.id }}", "username": "${{ inputs.username }}", "password": "${{ inputs.password }}" },{ "id": "${{ inputs.id }}-plugins", "username": "${{ inputs.username }}", "password": "${{ inputs.password }}" }]'
