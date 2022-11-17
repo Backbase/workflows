@@ -1,0 +1,105 @@
+# Pipeline for releasing jib based docker images
+
+name: Docker Release
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'Java Version'
+        default: '17'
+        required: false
+        type: string
+      java-distribution:
+        description: 'Java Distribution'
+        default: 'temurin'
+        required: false
+        type: string
+      version:
+        description: 'Release version eg. 1.0.2-beta'
+        required: true
+        type: string
+    secrets:
+      maven-username:
+        description: 'Artifactory Username'
+        required: true
+      maven-password:
+        required: true
+        description: 'Artifactory Password'
+      github-token:
+        required: true
+        description: 'GitHub Token for Container Registry'
+
+jobs:
+  verify:
+    name: Maven Verify
+    uses: backbase/workflows/.github/workflows/maven-verify.yml@main
+    with:
+      java-version: ${{ inputs.java-version }}
+      java-distribution: ${{ inputs.java-distribution }}
+    secrets:
+      maven-username: ${{ secrets.maven-username }}
+      maven-password: ${{ secrets.maven-password }}
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [ verify ]
+    env:
+      REGISTRY: ghcr.io
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: '${{ inputs.java-version }}'
+          distribution: '${{ inputs.java-distribution }}'
+
+      - name: Configure Maven
+        uses: backbase/workflows/.github/actions/config-repo@main
+        with:
+          username: ${{ secrets.maven-username }}
+          password: ${{ secrets.maven-password }}
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Update POM Version
+        run: |
+          mvn versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false -B
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.github-token }}
+
+      - name: Docker Build
+        run: mvn package -Dmaven.test.skip.exec=true -P docker-image -Djib.to.image=${REGISTRY}/backbase/${GITHUB_REPOSITORY##*/}:${{ inputs.version }}
+
+      - name: Bump POM Version
+        run: |
+          mvn org.codehaus.mojo:versions-maven-plugin:2.13.0:set -DnextSnapshot=true -DnextSnapshotIndexToIncrement=2 -DgenerateBackupPoms=false
+
+      - name: Create Bump Pull Request
+        uses: peter-evans/create-pull-request@v4.2.0
+        with:
+          title: "ci: bump pom snapshot version"
+          body: "Bumps pom snapshot version"
+          commit-message: "ci: bump pom snapshot version"
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          delete-branch: true
+          assignees: ${{ github.actor }}
+          branch-suffix: short-commit-hash
+          branch: "feature/bump-version"
+          base: main
+          token: ${{ secrets.github-token }}
