@@ -1,0 +1,42 @@
+name: Verify Maven Bump
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/actions/maven-bump/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/actions/maven-bump/**'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Configure Maven
+        uses: ./.github/actions/config-repo
+        with:
+          username: ${{ secrets.MAVEN_USERNAME }}
+          password: ${{ secrets.MAVEN_PASSWORD }}
+
+      - name: Bump Version
+        uses: ./.github/actions/maven-bump
+        with:
+          pom: .github/test/test-pom/pom.xml
+
+      - name: Check version
+        run: |
+          if [ "1.1.0-beta" != "$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" ]; then
+              echo "Version bump failed"
+              exit
+          fi

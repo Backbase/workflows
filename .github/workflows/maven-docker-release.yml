@@ -86,9 +86,8 @@ jobs:
       - name: Docker Build
         run: mvn package -Dmaven.test.skip.exec=true -P docker-image -Djib.to.image=${REGISTRY}/backbase/${GITHUB_REPOSITORY##*/}:${{ inputs.version }}
 
-      - name: Bump POM Version
-        run: |
-          mvn org.codehaus.mojo:versions-maven-plugin:2.13.0:set -DnextSnapshot=true -DnextSnapshotIndexToIncrement=2 -DgenerateBackupPoms=false
+      - name: Configure Maven
+        uses: backbase/workflows/.github/actions/maven-bump@main
 
       - name: Create Bump Pull Request
         uses: peter-evans/create-pull-request@v4.2.0

@@ -1,0 +1,31 @@
+name: 'Bump Maven Version'
+description: Use semantic versioning to bump the version of your maven project
+inputs:
+  pom:
+    description: 'Location of POM file'
+    required: false
+    default: 'pom.xml'
+outputs:
+  old-version:
+    description: "The version before bumping"
+    value: ${{ steps.current.outputs.version }}
+  version:
+    description: "New bumped version"
+    value: ${{ steps.bump.outputs.version }}
+runs:
+  using: "composite"
+  steps:
+    - name: Get POM Version
+      id: current
+      shell: bash
+      run: |
+        echo "version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -B --file ${{ inputs.pom }})" >> $GITHUB_OUTPUT
+    - name: Calculate next version
+      id: bump
+      shell: bash
+      run: |
+        echo "version=$(echo ${{ steps.current.outputs.version }} | awk -F'[.-]' -vOFS='-' '{print $1"."$2+1"."0, $4}')" >> $GITHUB_OUTPUT
+    - name: Update POM Version
+      shell: bash
+      run: |
+        mvn versions:set -DnewVersion=${{ steps.bump.outputs.version }} -DgenerateBackupPoms=false -B --file ${{ inputs.pom }}
