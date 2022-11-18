@@ -1,0 +1,33 @@
+name: Verify Config Repo Action
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/actions/config-repo/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/actions/config-repo/**'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Configure Maven
+        uses: ./.github/actions/config-repo
+        with:
+          username: ${{ secrets.MAVEN_USERNAME }}
+          password: ${{ secrets.MAVEN_PASSWORD }}
+
+      - name: Maven Compile
+        run: mvn -B compile --file .github/test/test-pom/pom.xml
