@@ -24,7 +24,7 @@ runs:
       id: bump
       shell: bash
       run: |
-        echo "version=$(echo ${{ steps.current.outputs.version }} | awk -F'[.-]' -vOFS='-' '{print $1"."$2+1"."0, $4}')" >> $GITHUB_OUTPUT
+        echo "version=$(echo ${{ steps.current.outputs.version }} | awk -F'[.-]' -vOFS='-' '{print $1"."$2+1"."0, "SNAPSHOT"}')" >> $GITHUB_OUTPUT
     - name: Update POM Version
       shell: bash
       run: |
