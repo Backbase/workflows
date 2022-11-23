@@ -42,6 +42,14 @@ jobs:
           username: ${{ secrets.maven-username }}
           password: ${{ secrets.maven-password }}
 
+      # In most cases you need a docker image from repo for testconainers
+      - name: Login to BB Docker Repository
+        uses: docker/login-action@v2
+        with:
+          registry: repo.backbase.com
+          username: ${{ secrets.maven-username }}
+          password: ${{ secrets.maven-password }}
+
       - name: Cache local Maven repository
         uses: actions/cache@v3
         with:
