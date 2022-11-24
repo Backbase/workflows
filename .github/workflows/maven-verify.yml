@@ -61,4 +61,5 @@ jobs:
         run: mvn -B verify --file pom.xml
 
       - name: Maven Dependency Tree Dependency Submission
+        if: github.actor != 'dependabot[bot]'
         uses: advanced-security/maven-dependency-submission-action@v2.0.1
