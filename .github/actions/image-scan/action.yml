@@ -1,0 +1,40 @@
+name: 'Scan docker image'
+description: Scan docker image with trivy and dockle
+inputs:
+  image:
+    description: 'Image file to scan. e.g. `alpine:latest` or `myownregistry.com/my-team/my-image:latest`'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Run Dockle
+      uses: erzz/dockle-action@v1
+      with:
+        image: ${{ inputs.image }}
+        report-format: sarif
+        report-name: dockle-report
+        failure-threshold: fatal
+        exit-code: 1
+        dockle-version: 0.3.16
+        accept-extensions: pem
+
+    - name: Upload dockle scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v1.2.0
+      with:
+        sarif_file: dockle-report.sarif
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: '${{ inputs.image }}'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
