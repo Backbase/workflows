@@ -37,7 +37,7 @@ jobs:
           distribution: "${{ inputs.java-distribution }}"
 
       - name: Configure Maven
-        uses: backbase/workflows/.github/actions/config-repo@main
+        uses: backbase/workflows/.github/actions/config-repo@v0.1.0
         with:
           username: ${{ secrets.maven-username }}
           password: ${{ secrets.maven-password }}
