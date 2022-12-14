@@ -33,7 +33,7 @@ on:
 jobs:
   verify:
     name: Maven Verify
-    uses: backbase/workflows/.github/workflows/maven-verify.yml@main
+    uses: backbase/workflows/.github/workflows/maven-verify.yml@v0.1.0
     with:
       java-version: ${{ inputs.java-version }}
       java-distribution: ${{ inputs.java-distribution }}
@@ -59,7 +59,7 @@ jobs:
           distribution: '${{ inputs.java-distribution }}'
 
       - name: Configure Maven
-        uses: backbase/workflows/.github/actions/config-repo@main
+        uses: backbase/workflows/.github/actions/config-repo@v0.1.0
         with:
           username: ${{ secrets.maven-username }}
           password: ${{ secrets.maven-password }}
@@ -87,7 +87,7 @@ jobs:
         run: mvn package -Dmaven.test.skip.exec=true -P docker-image -Djib.to.image=${REGISTRY}/backbase/${GITHUB_REPOSITORY##*/}:${{ inputs.version }}
 
       - name: Configure Maven
-        uses: backbase/workflows/.github/actions/maven-bump@main
+        uses: backbase/workflows/.github/actions/maven-bump@v0.1.0
 
       - name: Create Bump Pull Request
         uses: peter-evans/create-pull-request@v4.2.3
