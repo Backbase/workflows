@@ -44,8 +44,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: [ verify ]
-    env:
-      REGISTRY: ghcr.io
+    strategy:
+      matrix:
+        registry: [ "ghcr.io/backbase" ]
 
     steps:
       - uses: actions/checkout@v3
@@ -75,16 +76,16 @@ jobs:
         run: |
           mvn versions:set -DnewVersion=${{ inputs.version }} -DgenerateBackupPoms=false -B
 
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log into registry ${{ matrix.registry }}
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2.1.0
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ matrix.registry }}
           username: ${{ github.actor }}
           password: ${{ secrets.github-token }}
 
       - name: Docker Build
-        run: mvn package -Dmaven.test.skip.exec=true -P docker-image -Djib.to.image=${REGISTRY}/backbase/${GITHUB_REPOSITORY##*/}:${{ inputs.version }}
+        run: mvn package -Dmaven.test.skip.exec=true -P docker-image -Djib.to.image=${{ matrix.registry }}/${GITHUB_REPOSITORY##*/}:${{ inputs.version }}
 
       - name: Configure Maven
         uses: backbase/workflows/.github/actions/maven-bump@v0.1.0
