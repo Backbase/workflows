@@ -1,23 +1,27 @@
 name: 'Push Helm Chart'
 description: Create and push Helm Chart to Repository if helm folder exists
 env:
-  GCR_REPOSITORY: oci://ghcr.io/backbase
+  GCR_IMAGE: oci://ghcr.io/${{ github.repository }}
 runs:
   using: "composite"
   steps:
-      - name: Check file existence
-        id: check_files
-        uses: andstor/file-existence-action@v2
-        with:
-         files: "helm/values.yml"
-      - name: Push Helm chart
-        if: steps.check_files.outputs.files_exists == 'true'
-        uses: bsord/helm-push@v4.1.0
-        with:
-         useOCIRegistry: true
-         registry-url:  ${{ env.GCR_IMAGE }}
-         access-token: ${{ secrets.GITHUB_TOKEN }}
-         username: ${{ github.actor }}
-         force: true
-         chart-folder: helm
-         add-repositories: true
+    - name: Check file existence
+      id: check_files
+      uses: andstor/file-existence-action@v2
+      with:
+        files: "helm/values.yml"
+    - id: lower-repo
+      shell: pwsh
+      run: |
+        "::set-output name=repository::$($env:GCR_IMAGE.ToLowerInvariant())"
+    - name: Push Helm chart
+      if: steps.check_files.outputs.files_exists == 'true'
+      uses: bsord/helm-push@v4.1.0
+      with:
+        useOCIRegistry: true
+        registry-url:  ${{ steps.lower-repo.outputs.repository }}
+        access-token: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ github.actor }}
+        force: true
+        chart-folder: helm
+        add-repositories: true
