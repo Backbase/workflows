@@ -10,8 +10,6 @@ inputs:
   username:
     description: 'Github Username to access repository'
     required: true
-env:
-  GCR_IMAGE: oci://ghcr.io/${{ inputs.repository }}
 runs:
   using: "composite"
   steps:
@@ -20,6 +18,10 @@ runs:
       uses: andstor/file-existence-action@v2
       with:
         files: "helm/values.yml"
+    - name: set repo url
+      shell: bash
+      run: |
+        echo "GCR_IMAGE=oci://ghcr.io/${{ inputs.repository }}" >> $GITHUB_ENV
     - id: lower-repo
       shell: pwsh
       run: |
