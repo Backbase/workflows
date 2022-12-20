@@ -88,6 +88,10 @@ jobs:
 
       - name: Create & Push Helm Chart
         uses: backbase/workflows/.github/actions/push-helm-chart@main
+        with:
+          repository: ${{ github.repository }}
+          username: ${{ github.actor }}
+          token: ${{ secrets.github-token }}
 
       - name: Configure Maven
         uses: backbase/workflows/.github/actions/maven-bump@v0.1.0

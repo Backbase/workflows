@@ -1,7 +1,15 @@
 name: 'Push Helm Chart'
 description: Create and push Helm Chart to Repository if helm folder exists
-env:
-  GCR_IMAGE: oci://ghcr.io/${{ github.repository }}
+inputs:
+  repository:
+    description: 'Github repository name'
+    required: true
+  token:
+    description: 'Github Token to access repository'
+    required: true
+  username:
+    description: 'Github Username to access repository'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -10,6 +18,10 @@ runs:
       uses: andstor/file-existence-action@v2
       with:
         files: "helm/values.yml"
+    - name: set repo url
+      shell: bash
+      run: |
+        echo "GCR_IMAGE=oci://ghcr.io/${{ inputs.repository }}" >> $GITHUB_ENV
     - id: lower-repo
       shell: pwsh
       run: |
@@ -20,8 +32,8 @@ runs:
       with:
         useOCIRegistry: true
         registry-url:  ${{ steps.lower-repo.outputs.repository }}
-        access-token: ${{ secrets.GITHUB_TOKEN }}
-        username: ${{ github.actor }}
+        access-token: ${{ inputs.token }}
+        username: ${{ inputs.username }}
         force: true
         chart-folder: helm
         add-repositories: true
