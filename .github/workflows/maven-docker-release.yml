@@ -87,7 +87,7 @@ jobs:
         run: mvn package -Dmaven.test.skip.exec=true -P docker-image -Djib.to.image=${REGISTRY}/backbase/${GITHUB_REPOSITORY##*/}:${{ inputs.version }}
 
       - name: Create & Push Helm Chart
-        uses: backbase/workflows/.github/actions/push-helm-chart@v0.1.0
+        uses: backbase/workflows/.github/actions/push-helm-chart@main
 
       - name: Configure Maven
         uses: backbase/workflows/.github/actions/maven-bump@v0.1.0
