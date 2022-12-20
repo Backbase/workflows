@@ -1,7 +1,17 @@
 name: 'Push Helm Chart'
 description: Create and push Helm Chart to Repository if helm folder exists
+inputs:
+  repository:
+    description: 'Github repository name'
+    required: true
+  token:
+    description: 'Github Token to access repository'
+    required: true
+  username:
+    description: 'Github Username to access repository'
+    required: true
 env:
-  GCR_IMAGE: oci://ghcr.io/${{ github.repository }}
+  GCR_IMAGE: oci://ghcr.io/${{ inputs.repository }}
 runs:
   using: "composite"
   steps:
@@ -20,8 +30,8 @@ runs:
       with:
         useOCIRegistry: true
         registry-url:  ${{ steps.lower-repo.outputs.repository }}
-        access-token: ${{ secrets.GITHUB_TOKEN }}
-        username: ${{ github.actor }}
+        access-token: ${{ inputs.token }}
+        username: ${{ inputs.username }}
         force: true
         chart-folder: helm
         add-repositories: true
