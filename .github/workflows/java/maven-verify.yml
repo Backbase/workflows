@@ -1,0 +1,66 @@
+# Pipeline for verifying an opensource Maven Service or Library
+
+name: Maven Verify
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'Java Version'
+        default: '17'
+        required: false
+        type: string
+      java-distribution:
+        description: 'Java Distribution'
+        default: 'temurin'
+        required: false
+        type: string
+    secrets:
+      maven-username:
+        description: 'Artifactory Username'
+        required: true
+      maven-password:
+        required: true
+        description: 'Artifactory Password'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: "${{ inputs.java-version }}"
+          distribution: "${{ inputs.java-distribution }}"
+
+      - name: Configure Maven
+        uses: backbase/workflows/.github/actions/config-repo@v0.1.0
+        with:
+          username: ${{ secrets.maven-username }}
+          password: ${{ secrets.maven-password }}
+
+      # In most cases you need a docker image from repo for testconainers
+      - name: Login to BB Docker Repository
+        uses: docker/login-action@v2
+        with:
+          registry: repo.backbase.com
+          username: ${{ secrets.maven-username }}
+          password: ${{ secrets.maven-password }}
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Maven Verify
+        run: mvn -B verify --file pom.xml
+
+      - name: Maven Dependency Tree Dependency Submission
+        continue-on-error: true #https://github.com/advanced-security/maven-dependency-submission-action/issues/13
+        if: github.actor != 'dependabot[bot]'
+        uses: advanced-security/maven-dependency-submission-action@v2.0.1
