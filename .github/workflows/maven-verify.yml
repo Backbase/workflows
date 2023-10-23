@@ -63,4 +63,4 @@ jobs:
       - name: Maven Dependency Tree Dependency Submission
         continue-on-error: true #https://github.com/advanced-security/maven-dependency-submission-action/issues/13
         if: github.actor != 'dependabot[bot]'
-        uses: advanced-security/maven-dependency-submission-action@v2.0.1
+        uses: advanced-security/maven-dependency-submission-action@v3.0.3
