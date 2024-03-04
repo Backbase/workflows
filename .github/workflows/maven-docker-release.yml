@@ -97,7 +97,7 @@ jobs:
         uses: backbase/workflows/.github/actions/maven-bump@v0.1.0
 
       - name: Create Bump Pull Request
-        uses: peter-evans/create-pull-request@v4.2.3
+        uses: peter-evans/create-pull-request@v6.0.1
         with:
           title: "ci: bump pom snapshot version"
           body: "Bumps pom snapshot version"
